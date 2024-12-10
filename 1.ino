@@ -47,9 +47,9 @@ void moveForward(float distance) {
   leftMotor.run(FORWARD);
   rightMotor.setSpeed(255);
   rightMotor.run(FORWARD);
-
+// Move the robot forward for the specified distance
   delay(timeToMove);
-
+// Stop the motors after moving forward
   stopMotors();
 }
 
