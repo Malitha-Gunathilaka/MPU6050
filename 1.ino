@@ -1,8 +1,8 @@
-#include <Wire.h>
-#include <Adafruit_MPU6050.h>
-#include <Adafruit_Sensor.h>
-#include <Adafruit_MPU6050.h>
-#include <AFMotor.h>
+#include <Wire.h> // Include the Wire library for I2C communication
+#include <Adafruit_MPU6050.h>   // Include the Adafruit MPU6050 library
+#include <Adafruit_Sensor.h>    // Include the Adafruit Sensor library
+#include <Adafruit_MPU6050.h>   // Include the Adafruit MPU6050 library
+#include <AFMotor.h>    // Include the Adafruit Motor Shield library
 
 // Create an MPU6050 object
 Adafruit_MPU6050 mpu;
@@ -12,14 +12,14 @@ AF_DCMotor leftMotor(1);  // Connect left motor to port 1
 AF_DCMotor rightMotor(2); // Connect right motor to port 2
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(115200);// Initialize serial communication at 115200 baud rate
 
   // Initialize MPU6050
   if (!mpu.begin()) {
-    Serial.println("Failed to find MPU6050 chip");
+    Serial.println("Failed to find MPU6050 chip"); // Print error message if MPU6050 is not found
     while (1);
   }
-  Serial.println("MPU6050 Found!");
+  Serial.println("MPU6050 Found!");// Print success message if MPU6050 is found
 
   // Set accelerometer range (optional)
   mpu.setAccelerometerRange(MPU6050_RANGE_2_G);
@@ -42,6 +42,7 @@ void moveForward(float distance) {
   float speed = 0.5; // meters per second
   float timeToMove = distance / speed * 1000; // time in milliseconds
 
+    // Set the speed of the left and right motors to maximum
   leftMotor.setSpeed(255);
   leftMotor.run(FORWARD);
   rightMotor.setSpeed(255);
