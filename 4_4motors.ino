@@ -63,7 +63,7 @@ void moveForward(float distance) {
 
 // Function to turn the robot by a specified angle
 void turnRobot(int targetAngle) {
-  sensors_event_t a, g, temp;
+  sensors_event_t a, g, temp; // Create sensor event objects for accelerometer, gyroscope, and temperature
   mpu.getEvent(&a, &g, &temp);
 
   // Initialize the total angle rotated by the robot  
@@ -122,12 +122,19 @@ void stopMotors() {
 }
 // Main code
 void loop() {
-  moveForward(1.0);  // Move forward 1 meter
+  delay(1000);
+  moveForward(0.5);  // Move forward 1 meter
   turnRobot(90);     // Turn 90 degrees right
   delay(1000);       // Wait for 1 second
-  moveForward(0.5);  // Move forward 1 meter
+  moveForward(0.2);  // Move forward 1 meter
+  delay(1000);       // Wait for 1 second
+  turnRobot(90);    // Turn 90 degrees left
+  moveForward(0.5);
+  turnRobot(-90);     // Turn 90 degrees right
+  delay(1000);       // Wait for 1 second
+  moveForward(0.2 );  // Move forward 1 meter
   delay(1000);       // Wait for 1 second
   turnRobot(-90);    // Turn 90 degrees left
-  moveForward(1.0);  // Move forward 1 meter
+  moveForward(0.5);
   delay(10000);      // Wait for 10 seconds
 }
