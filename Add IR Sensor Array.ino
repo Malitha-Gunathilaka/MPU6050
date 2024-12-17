@@ -166,6 +166,8 @@ void checkAlignment() {
     leftMotor2.run(FORWARD);
     rightMotor2.run(FORWARD);
 
+     delay(100); // Small delay to allow the rover to adjust its position
+
     leftSensorValue = analogRead(irSensorLeft);
     rightSensorValue = analogRead(irSensorRight);
   }
