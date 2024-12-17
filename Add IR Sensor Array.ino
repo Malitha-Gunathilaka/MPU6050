@@ -12,6 +12,9 @@ AF_DCMotor rightMotor1(2); // Connect right motor to port 2
 AF_DCMotor leftMotor2(4);  // Connect left motor to port 4
 AF_DCMotor rightMotor2(3); // Connect right motor to port 3
 
+// IR sensor array pins
+const int irSensorLeft = A0;
+const int irSensorRight = A1;
 
 void setup() {
   Serial.begin(115200);// Initialize serial communication at 115200 baud rate
@@ -44,19 +47,37 @@ void moveForward(float distance) {
   float speed = 0.5; // meters per second
   float timeToMove = distance / speed * 1000; // time in milliseconds
 
-    // Set the speed of the left and right motors to maximum
-  leftMotor1.setSpeed(255);
-  leftMotor1.run(FORWARD);
-  rightMotor1.setSpeed(255);
-  rightMotor1.run(FORWARD);
-  //
-  leftMotor2.setSpeed(255);
-  leftMotor2.run(FORWARD);
-  rightMotor2.setSpeed(255);
-  rightMotor2.run(FORWARD);
-// Move the robot forward for the specified distance
-  delay(timeToMove);
-// Stop the motors after moving forward
+  unsigned long startTime = millis();
+  while (millis() - startTime < timeToMove) {
+    int leftSensorValue = analogRead(irSensorLeft);
+    int rightSensorValue = analogRead(irSensorRight);
+
+    if (leftSensorValue < rightSensorValue) {
+      // Adjust to the left
+      leftMotor1.setSpeed(200);
+      leftMotor2.setSpeed(200);
+      rightMotor1.setSpeed(255);
+      rightMotor2.setSpeed(255);
+    } else if (rightSensorValue < leftSensorValue) {
+      // Adjust to the right
+      leftMotor1.setSpeed(255);
+      leftMotor2.setSpeed(255);
+      rightMotor1.setSpeed(200);
+      rightMotor2.setSpeed(200);
+    } else {
+      // Move straight
+      leftMotor1.setSpeed(255);
+      leftMotor2.setSpeed(255);
+      rightMotor1.setSpeed(255);
+      rightMotor2.setSpeed(255);
+    }
+
+    leftMotor1.run(FORWARD);
+    rightMotor1.run(FORWARD);
+    leftMotor2.run(FORWARD);
+    rightMotor2.run(FORWARD);
+  }
+
   stopMotors();
 }
 
@@ -69,7 +90,7 @@ void turnRobot(int targetAngle) {
   float totalAngle = 0;
   unsigned long prevTime = millis();
 
-// Continue turning the robot until the target angle is reached
+  // Continue turning the robot until the target angle is reached
   while (abs(totalAngle) < abs(targetAngle)) {
     unsigned long currentTime = millis();
     float deltaTime = (currentTime - prevTime) / 1000.0;
@@ -119,21 +140,59 @@ void stopMotors() {
   leftMotor2.run(RELEASE);
   rightMotor2.run(RELEASE);
 }
+
+// Function to check alignment with the line
+void checkAlignment() {
+  int leftSensorValue = analogRead(irSensorLeft);
+  int rightSensorValue = analogRead(irSensorRight);
+
+  while (abs(leftSensorValue - rightSensorValue) > 10) {
+    if (leftSensorValue < rightSensorValue) {
+      // Adjust to the left
+      leftMotor1.setSpeed(200);
+      leftMotor2.setSpeed(200);
+      rightMotor1.setSpeed(255);
+      rightMotor2.setSpeed(255);
+    } else if (rightSensorValue < leftSensorValue) {
+      // Adjust to the right
+      leftMotor1.setSpeed(255);
+      leftMotor2.setSpeed(255);
+      rightMotor1.setSpeed(200);
+      rightMotor2.setSpeed(200);
+    }
+
+    leftMotor1.run(FORWARD);
+    rightMotor1.run(FORWARD);
+    leftMotor2.run(FORWARD);
+    rightMotor2.run(FORWARD);
+
+    leftSensorValue = analogRead(irSensorLeft);
+    rightSensorValue = analogRead(irSensorRight);
+  }
+
+  stopMotors();
+}
+
 // Main code
 void loop() {
   delay(1000);
-  moveForward(0.5);  // Move forward 1 meter
+  moveForward(0.5);  // Move forward 0.5 meters
+  checkAlignment();  // Check alignment with the line
   turnRobot(90);     // Turn 90 degrees right
   delay(1000);       // Wait for 1 second
-  moveForward(0.2);  // Move forward 1 meter
+  moveForward(0.2);  // Move forward 0.2 meters
+  checkAlignment();  // Check alignment with the line
   delay(1000);       // Wait for 1 second
-  turnRobot(90);    // Turn 90 degrees left
-  moveForward(0.5);
-  turnRobot(-90);     // Turn 90 degrees right
+  turnRobot(90);     // Turn 90 degrees left
+  moveForward(0.5);  // Move forward 0.5 meters
+  checkAlignment();  // Check alignment with the line
+  turnRobot(-90);    // Turn 90 degrees right
   delay(1000);       // Wait for 1 second
-  moveForward(0.2 );  // Move forward 1 meter
+  moveForward(0.2);  // Move forward 0.2 meters
+  checkAlignment();  // Check alignment with the line
   delay(1000);       // Wait for 1 second
   turnRobot(-90);    // Turn 90 degrees left
-  moveForward(0.5);
+  moveForward(0.5);  // Move forward 0.5 meters
+  checkAlignment();  // Check alignment with the line
   delay(10000);      // Wait for 10 seconds
 }
