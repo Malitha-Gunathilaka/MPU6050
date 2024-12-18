@@ -173,8 +173,6 @@ void loop() {
     moveForward(0.3);  // Move forward 30 cm
     turnRobot(-90);    // Turn 90 degrees left
     delay(1000);       // Wait for 1 second
-    moveForward(1.0);  // Move forward 1 meter
-    delay(1000);       // Wait for 1 second
   }
   delay(10000);  // Wait for 10 seconds before repeating the loop
 }
