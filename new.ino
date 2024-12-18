@@ -13,7 +13,7 @@ AF_DCMotor motor2(2);
 AF_DCMotor motor3(3);
 AF_DCMotor motor4(4);
 
-int speed = 255;  // Default motor speed
+int speed = 235;  // Default motor speed
 
 void setup() {
   Serial.begin(9600);  // Initialize serial communication at 115200 baud rate

@@ -1,6 +1,7 @@
 #include <Wire.h>              // Include the Wire library for I2C communication
 #include <Adafruit_MPU6050.h>  // Include the Adafruit MPU6050 library
 #include <Adafruit_Sensor.h>   // Include the Adafruit Sensor library
+#include <Adafruit_MPU6050.h>  // Include the Adafruit MPU6050 library
 #include <AFMotor.h>           // Include the Adafruit Motor Shield library
 
 // Create an MPU6050 object
@@ -12,16 +13,17 @@ AF_DCMotor motor2(2);
 AF_DCMotor motor3(3);
 AF_DCMotor motor4(4);
 
-int speed = 255;  // Default motor speed
+int speed = 235;  // Default motor speed
 
 void setup() {
-  Serial.begin(9600);  // Initialize serial communication at 9600 baud rate
+  Serial.begin(9600);  // Initialize serial communication at 115200 baud rate
   setMotorSpeed(speed);
   
   // Initialize MPU6050
   if (!mpu.begin()) {
     Serial.println("Failed to find MPU6050 chip");  // Print error message if MPU6050 is not found
-    while (1);
+    while (1)
+      ;
   }
   Serial.println("MPU6050 Found!");  // Print success message if MPU6050 is found
 
@@ -46,103 +48,37 @@ void moveForward(float distance) {
   float speed = 0.5;                           // meters per second
   float timeToMove = distance / speed * 1000;  // time in milliseconds
 
-  // Set the initial speed of the motors
-  setMotorSpeed(speed);
-
-  // Get the initial orientation
-  sensors_event_t a, g, temp;
-  mpu.getEvent(&a, &g, &temp);
-  float initialAngle = g.gyro.z;
-
-  unsigned long startTime = millis();
-  while (millis() - startTime < timeToMove) {
-    mpu.getEvent(&a, &g, &temp);
-    float currentAngle = g.gyro.z;
-
-    // Calculate the error in the angle
-    float angleError = currentAngle - initialAngle;
-
-    // Adjust motor speeds based on the angle error
-    if (angleError > 0) {
-      // Robot is turning right, slow down the right motors
-      motor1.setSpeed(speed - angleError);
-      motor2.setSpeed(speed - angleError);
-      motor3.setSpeed(speed + angleError);
-      motor4.setSpeed(speed + angleError);
-    } else if (angleError < 0) {
-      // Robot is turning left, slow down the left motors
-      motor1.setSpeed(speed + angleError);
-      motor2.setSpeed(speed + angleError);
-      motor3.setSpeed(speed - angleError);
-      motor4.setSpeed(speed - angleError);
-    } else {
-      // Robot is moving straight, set all motors to the same speed
-      setMotorSpeed(speed);
-    }
-
-    // Move the robot forward
-    motor1.run(FORWARD);
-    motor2.run(FORWARD);
-    motor3.run(FORWARD);
-    motor4.run(FORWARD);
-
-    delay(10);  // Small delay to allow for sensor reading and motor adjustment
-  }
-
+  // Set the speed of the left and right motors to maximum
+  motor1.run(FORWARD);
+  motor2.run(FORWARD);
+  motor3.run(FORWARD);
+  motor4.run(FORWARD);
+  // Move the robot forward for the specified distance
+  delay(timeToMove);
   // Stop the motors after moving forward
   stopMotors();
 }
 
-void moveBackward(float distance) {
-  // Assuming the robot moves at a speed of 0.5 meters per second
-  float speed = 0.5;                           // meters per second
-  float timeToMove = distance / speed * 1000;  // time in milliseconds
+void goForward() {
+  delay(1000);
+  moveForward(1.4);  // Move forward 1.4 meters
+  delay(500);
+  turnRobot(-3);     // Turn -3 degrees
+  moveForward(1.3);  // Move forward 1.3 meters
+  turnRobot(-1);     // Turn -1 degree
+  moveForward(1.3);  // Move forward 1.3 meters
+  delay(500);
+}
 
-  // Set the initial speed of the motors
-  setMotorSpeed(speed);
-
-  // Get the initial orientation
-  sensors_event_t a, g, temp;
-  mpu.getEvent(&a, &g, &temp);
-  float initialAngle = g.gyro.z;
-
-  unsigned long startTime = millis();
-  while (millis() - startTime < timeToMove) {
-    mpu.getEvent(&a, &g, &temp);
-    float currentAngle = g.gyro.z;
-
-    // Calculate the error in the angle
-    float angleError = currentAngle - initialAngle;
-
-    // Adjust motor speeds based on the angle error
-    if (angleError > 0) {
-      // Robot is turning right, slow down the right motors
-      motor1.setSpeed(speed - angleError);
-      motor2.setSpeed(speed - angleError);
-      motor3.setSpeed(speed + angleError);
-      motor4.setSpeed(speed + angleError);
-    } else if (angleError < 0) {
-      // Robot is turning left, slow down the left motors
-      motor1.setSpeed(speed + angleError);
-      motor2.setSpeed(speed + angleError);
-      motor3.setSpeed(speed - angleError);
-      motor4.setSpeed(speed - angleError);
-    } else {
-      // Robot is moving straight, set all motors to the same speed
-      setMotorSpeed(speed);
-    }
-
-    // Move the robot backward
-    motor1.run(BACKWARD);
-    motor2.run(BACKWARD);
-    motor3.run(BACKWARD);
-    motor4.run(BACKWARD);
-
-    delay(10);  // Small delay to allow for sensor reading and motor adjustment
-  }
-
-  // Stop the motors after moving backward
-  stopMotors();
+void goForward1() {
+  delay(1000);
+  moveForward(1.4);  // Move forward 1.4 meters
+  delay(500);
+  turnRobot(-2);     // Turn -3 degrees
+  moveForward(1.3);  // Move forward 1.3 meters
+  turnRobot(-1);     // Turn -1 degree
+  moveForward(1.3);  // Move forward 1.3 meters
+  delay(500);
 }
 
 // Function to turn the robot by a specified angle
@@ -202,23 +138,24 @@ void setMotorSpeed(int speed) {
   motor4.setSpeed(speed);
 }
 
+
 // Main code
 void loop() {
+  goForward(); 
   for (int i = 0; i < 5; i++) {
     delay(1000);
-    moveForward(1.0);  // Move forward 1 meter
     turnRobot(90);     // Turn 90 degrees right
     delay(1000);       // Wait for 1 second
-    moveForward(0.3);  // Move forward 30 cm
+    moveForward(0.6);  // Move forward 30 cm
     turnRobot(90);     // Turn 90 degrees right
     delay(1000);       // Wait for 1 second
-    moveForward(1.0);  // Move forward 1 meter
+    goForward();   // Move forward 1 meter
     turnRobot(-90);    // Turn 90 degrees left
     delay(1000);       // Wait for 1 second
-    moveForward(0.3);  // Move forward 30 cm
+    moveForward(0.6);  // Move forward 30 cm
     turnRobot(-90);    // Turn 90 degrees left
     delay(1000);       // Wait for 1 second
-    moveForward(1.0);  // Move forward 1 meter
+    goForward();   // Move forward 1 meter
     delay(1000);       // Wait for 1 second
   }
   delay(10000);  // Wait for 10 seconds before repeating the loop

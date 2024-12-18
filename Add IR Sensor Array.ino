@@ -146,7 +146,9 @@ void checkAlignment() {
   int leftSensorValue = analogRead(irSensorLeft);
   int rightSensorValue = analogRead(irSensorRight);
 
-  while (abs(leftSensorValue - rightSensorValue) > 10) {
+    // Adjust the robot position until it is aligned with the line
+  while (abs(leftSensorValue - rightSensorValue) > 10)// Threshold value for alignment 
+  {
     if (leftSensorValue < rightSensorValue) {
       // Adjust to the left
       leftMotor1.setSpeed(200);

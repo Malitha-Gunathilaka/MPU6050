@@ -47,24 +47,14 @@ void moveForward(float distance) {
   // Assuming the robot moves at a speed of 0.5 meters per second
   float speed = 0.5;                           // meters per second
   float timeToMove = distance / speed * 1000;  // time in milliseconds
-  unsigned long startTime = millis();
-  unsigned long correctionInterval = 500;      // Time interval for corrections in milliseconds
-  unsigned long lastCorrectionTime = millis();
 
   // Set the speed of the left and right motors to maximum
   motor1.run(FORWARD);
   motor2.run(FORWARD);
   motor3.run(FORWARD);
   motor4.run(FORWARD);
-
   // Move the robot forward for the specified distance
-  while (millis() - startTime < timeToMove) {
-    if (millis() - lastCorrectionTime >= correctionInterval) {
-      turnRobot(0);  // Correct the orientation to 0 degrees
-      lastCorrectionTime = millis();
-    }
-  }
-
+  delay(timeToMove);
   // Stop the motors after moving forward
   stopMotors();
 }
@@ -103,16 +93,12 @@ void turnRobot(int targetAngle) {
       motor2.run(BACKWARD);
       motor3.run(BACKWARD);
       motor4.run(FORWARD);
-    } else if (targetAngle < 0) {
+    } else {
       // Left turn
       motor1.run(BACKWARD);
       motor2.run(FORWARD);
       motor3.run(FORWARD);
       motor4.run(BACKWARD);
-    } else {
-      // Stop turning
-      stopMotors();
-      break;
     }
   }
   stopMotors();
@@ -136,14 +122,13 @@ void setMotorSpeed(int speed) {
 // Main code
 void loop() {
   delay(1000);
-  // moveForward(1.4);  // Move forward 1 meter
-  // delay(500);
-  // turnRobot(-3);
-  // moveForward(1.3);
-  // turnRobot(-1);
-  // moveForward(1.3);
-  // delay(500);
-    moveForward(3.5);
+  moveForward(1.4);  // Move forward 1 meter
+  delay(500);
+  turnRobot(-3);
+  moveForward(1.3);
+  turnRobot(-1);
+  moveForward(1.3);
+  delay(500);
   for (int i = 0; i < 5; i++) {
     delay(1500);
     turnRobot(90);     // Turn 90 degrees right
