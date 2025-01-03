@@ -1,0 +1,198 @@
+#include <Wire.h>
+#include <Adafruit_MPU6050.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_HMC5883_U.h>
+#include <AFMotor.h>
+
+// Sensor objects
+Adafruit_MPU6050 mpu; 
+Adafruit_HMC5883_Unified mag = Adafruit_HMC5883_Unified(12345);
+
+// Motor objects
+AF_DCMotor motor1(1);
+AF_DCMotor motor2(2);
+AF_DCMotor motor3(3);
+AF_DCMotor motor4(4);
+
+// Global variables
+float initialHeading;
+float targetHeading;
+int baseSpeed = 235;
+float Kp = 2.0;  // Proportional gain
+float Ki = 0.5;  // Integral gain
+float Kd = 0.1;  // Derivative gain
+float integral = 0;
+float prevError = 0;
+
+void setup() {
+  Serial.begin(9600);
+  Wire.begin();
+  
+  // Initialize MPU6050
+  if (!mpu.begin()) {
+    Serial.println("Failed to find MPU6050 chip");
+    while (1) { delay(10); }
+  }
+  
+  // Initialize HMC5883L
+  if (!mag.begin()) {
+    Serial.println("Failed to find HMC5883L");
+    while (1) { delay(10); }
+  }
+  
+  // Configure MPU6050
+  mpu.setAccelerometerRange(MPU6050_RANGE_2_G);
+  mpu.setGyroRange(MPU6050_RANGE_250_DEG);
+  mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
+  
+  // Set initial motor speeds
+  setMotorSpeed(baseSpeed);
+  
+  // Get initial heading
+  initialHeading = getHeading();
+  targetHeading = initialHeading;
+  
+  delay(1000); // Stabilization delay
+}
+
+float getHeading() {
+  sensors_event_t event;
+  mag.getEvent(&event);
+  
+  float heading = atan2(event.magnetic.y, event.magnetic.x);
+  if (heading < 0) {
+    heading += 2 * PI;
+  }
+  
+  return heading * 180/M_PI;
+}
+
+void moveForward(float distance) {
+  float speed = 0.5;  // meters per second
+  float timeToMove = distance / speed * 1000;  // milliseconds
+  unsigned long startTime = millis();
+  
+  // Reset PID variables
+  integral = 0;
+  prevError = 0;
+  
+  while (millis() - startTime < timeToMove) {
+    float currentHeading = getHeading();
+    float error = targetHeading - currentHeading;
+    
+    // Normalize error to -180 to +180
+    if (error > 180) error -= 360;
+    if (error < -180) error += 360;
+    
+    // PID calculations
+    integral += error;
+    float derivative = error - prevError;
+    float correction = (Kp * error) + (Ki * integral) + (Kd * derivative);
+    
+    // Apply speed corrections
+    int leftSpeed = baseSpeed - correction;
+    int rightSpeed = baseSpeed + correction;
+    
+    // Constrain speeds
+    leftSpeed = constrain(leftSpeed, 0, 255);
+    rightSpeed = constrain(rightSpeed, 0, 255);
+    
+    // Apply to motors
+    motor1.setSpeed(leftSpeed);
+    motor4.setSpeed(leftSpeed);
+    motor2.setSpeed(rightSpeed);
+    motor3.setSpeed(rightSpeed);
+    
+    // Move forward
+    motor1.run(FORWARD);
+    motor2.run(FORWARD);
+    motor3.run(FORWARD);
+    motor4.run(FORWARD);
+    
+    // Store error for next iteration
+    prevError = error;
+    
+    // Debug output
+    Serial.print("Heading: "); Serial.print(currentHeading);
+    Serial.print(" Error: "); Serial.print(error);
+    Serial.print(" Correction: "); Serial.println(correction);
+    
+    delay(50); // Control loop delay
+  }
+  
+  stopMotors();
+}
+
+void turnRobot(int targetAngle) {
+  float startHeading = getHeading();
+  float targetHeading = startHeading + targetAngle;
+  
+  // Normalize target heading
+  if (targetHeading > 360) targetHeading -= 360;
+  if (targetHeading < 0) targetHeading += 360;
+  
+  while (true) {
+    float currentHeading = getHeading();
+    float error = targetHeading - currentHeading;
+    
+    // Normalize error
+    if (error > 180) error -= 360;
+    if (error < -180) error += 360;
+    
+    // Check if we're close enough
+    if (abs(error) < 2.0) break;
+    
+    // Turn based on error direction
+    if (error > 0) {
+      // Turn right
+      motor1.run(FORWARD);
+      motor4.run(FORWARD);
+      motor2.run(BACKWARD);
+      motor3.run(BACKWARD);
+    } else {
+      // Turn left
+      motor1.run(BACKWARD);
+      motor4.run(BACKWARD);
+      motor2.run(FORWARD);
+      motor3.run(FORWARD);
+    }
+    
+    delay(10);
+  }
+  
+  stopMotors();
+}
+
+void stopMotors() {
+  motor1.run(RELEASE);
+  motor2.run(RELEASE);
+  motor3.run(RELEASE);
+  motor4.run(RELEASE);
+}
+
+void setMotorSpeed(int speed) {
+  motor1.setSpeed(speed);
+  motor2.setSpeed(speed);
+  motor3.setSpeed(speed);
+  motor4.setSpeed(speed);
+}
+
+void loop() {
+  for (int i = 0; i < 5; i++) {
+    delay(1000);
+    moveForward(3.5);
+    delay(1500);
+    turnRobot(90);
+    delay(1000);
+    moveForward(0.6);
+    turnRobot(90);
+    delay(1000);
+    moveForward(3.5);
+    turnRobot(-90);
+    delay(1000);
+    moveForward(0.6);
+    turnRobot(-90);
+    delay(1000);
+  }
+  delay(10000);
+}

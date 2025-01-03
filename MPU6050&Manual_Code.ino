@@ -1,4 +1,4 @@
-#include <AFMotor.h>  // Adafruit Motor Shield library
+     #include <AFMotor.h>  // Adafruit Motor Shield library
 #include <NewPing.h> // NewPing library for ultrasonic sensor
 #include <Servo.h> // Servo library
 #include <Wire.h>  // Include the Wire library for I2C communication
@@ -12,8 +12,8 @@ Adafruit_MPU6050 mpu;
 // Motor initialization for layout:
 //    M1    M2  (Front)
 //     ┌────┐         
-//     │    │         // Motor 1 and 2 control the left side of the robot
-//     │    │         // Motor 3 and 4 control the right side of the robot
+//     │    │         // Motor 1 and 4 control the left side of the robot
+//     │    │         // Motor 2 and 3 control the right side of the robot
 //     └────┘
 //    M4    M3  (Back)
 //////////////////////

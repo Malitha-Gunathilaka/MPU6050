@@ -1,11 +1,14 @@
 #include <Wire.h>              // Include the Wire library for I2C communication
 #include <Adafruit_MPU6050.h>  // Include the Adafruit MPU6050 library
 #include <Adafruit_Sensor.h>   // Include the Adafruit Sensor library
-#include <Adafruit_MPU6050.h>  // Include the Adafruit MPU6050 library
 #include <AFMotor.h>           // Include the Adafruit Motor Shield library
+#include <QMC5883LCompass.h>   // Include the QMC5883L Compass library
 
 // Create an MPU6050 object
 Adafruit_MPU6050 mpu;
+
+// Create a QMC5883LCompass object
+QMC5883LCompass compass;
 
 // Motor control constants and objects
 AF_DCMotor motor1(1);
@@ -41,25 +44,67 @@ void setup() {
   mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
   Serial.print("Filter bandwidth set to: ");
   Serial.println(mpu.getFilterBandwidth());
+
+  // Initialize compass
+  compass.init();
+  compass.setCalibrationOffsets(-446.00, -1695.00, 16383.00);
+    compass.setCalibrationScales(13.84, 3.64, 0.38);
 }
 
 void moveForward(float distance) {
   // Assuming the robot moves at a speed of 0.5 meters per second
   float speed = 0.5;                           // meters per second
   float timeToMove = distance / speed * 1000;  // time in milliseconds
+  unsigned long startTime = millis();
+  unsigned long correctionInterval = 100;      // Time interval for corrections in milliseconds
+  unsigned long lastCorrectionTime = millis();
+
+  // Get initial heading
+  compass.read();
+  int initialHeading = compass.getAzimuth();
 
   // Set the speed of the left and right motors to maximum
   motor1.run(FORWARD);
   motor2.run(FORWARD);
   motor3.run(FORWARD);
   motor4.run(FORWARD);
+
   // Move the robot forward for the specified distance
-  delay(timeToMove);
+  while (millis() - startTime < timeToMove) {
+    if (millis() - lastCorrectionTime >= correctionInterval) {
+      compass.read();
+      int currentHeading = compass.getAzimuth();
+      int headingError = initialHeading - currentHeading;
+
+      // Correct the orientation to the initial heading
+      if (headingError > 5) {
+        // Turn right slightly
+        motor1.run(FORWARD);
+        motor2.run(BACKWARD);
+        motor3.run(BACKWARD);
+        motor4.run(FORWARD);
+      } else if (headingError < -5) {
+        // Turn left slightly
+        motor1.run(BACKWARD);
+        motor2.run(FORWARD);
+        motor3.run(FORWARD);
+        motor4.run(BACKWARD);
+      } else {
+        // Move straight
+        motor1.run(FORWARD);
+        motor2.run(FORWARD);
+        motor3.run(FORWARD);
+        motor4.run(FORWARD);
+      }
+
+      lastCorrectionTime = millis();
+    }
+  }
+
   // Stop the motors after moving forward
   stopMotors();
 }
 
-// Function to turn the robot by a specified angle
 void turnRobot(int targetAngle) {
   sensors_event_t a, g, temp;
   mpu.getEvent(&a, &g, &temp);
@@ -91,12 +136,16 @@ void turnRobot(int targetAngle) {
       motor2.run(BACKWARD);
       motor3.run(BACKWARD);
       motor4.run(FORWARD);
-    } else {
+    } else if (targetAngle < 0) {
       // Left turn
       motor1.run(BACKWARD);
       motor2.run(FORWARD);
       motor3.run(FORWARD);
       motor4.run(BACKWARD);
+    } else {
+      // Stop turning
+      stopMotors();
+      break;
     }
   }
   stopMotors();
@@ -120,18 +169,19 @@ void setMotorSpeed(int speed) {
 void loop() {
   for (int i = 0; i < 5; i++) {
     delay(1000);
-    moveForward(3.0);  // Move forward 1 meter
+    moveForward(3.5);
+    delay(1500);
     turnRobot(90);     // Turn 90 degrees right
     delay(1000);       // Wait for 1 second
-    moveForward(0.3);  // Move forward 30 cm
+    moveForward(0.6);  // Move forward 30 cm
     turnRobot(90);     // Turn 90 degrees right
     delay(1000);       // Wait for 1 second
-    moveForward(3.0);  // Move forward 1 meter
+    moveForward(3.5);  // Move forward 1 meter
     turnRobot(-90);    // Turn 90 degrees left
     delay(1000);       // Wait for 1 second
-    moveForward(0.3);  // Move forward 30 cm
+    moveForward(0.6);  // Move forward 30 cm
     turnRobot(-90);    // Turn 90 degrees left
-    delay(1000);       // Wait for 1 second
+    delay(1000);       // Wait for 1 second     
   }
   delay(10000);  // Wait for 10 seconds before repeating the loop
 }

@@ -135,16 +135,9 @@ void setMotorSpeed(int speed) {
 
 // Main code
 void loop() {
-  delay(1000);
-  // moveForward(1.4);  // Move forward 1 meter
-  // delay(500);
-  // turnRobot(-3);
-  // moveForward(1.3);
-  // turnRobot(-1);
-  // moveForward(1.3);
-  // delay(500);
-    moveForward(3.5);
   for (int i = 0; i < 5; i++) {
+    delay(1000);
+    moveForward(3.5);
     delay(1500);
     turnRobot(90);     // Turn 90 degrees right
     delay(1000);       // Wait for 1 second
@@ -156,9 +149,7 @@ void loop() {
     delay(1000);       // Wait for 1 second
     moveForward(0.6);  // Move forward 30 cm
     turnRobot(-90);    // Turn 90 degrees left
-    delay(1000);       // Wait for 1 second
-    moveForward(3.5);  // Move forward 1 meter
-    delay(1000);       // Wait for 1 second
+    delay(1000);       // Wait for 1 second     
   }
   delay(10000);  // Wait for 10 seconds before repeating the loop
 }
